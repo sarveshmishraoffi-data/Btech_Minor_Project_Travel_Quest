@@ -1,2 +1,5 @@
-# Btech_Minor_Project_Travel_Quest
-B.Tech 3rd year academic minor project.
+#MAJOR_PROJECT
+This online platform for rental accommodations. 
+We have implemented full stack project using MVC framework. 
+MERN is used in this application. 
+"# Travel_Quest_App" 

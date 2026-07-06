@@ -1,9 +1,11 @@
+require('dotenv').config();
+require('dotenv').config({ path: '../.env' });
 const mongoose = require("mongoose");
 const initData = require("./data.js");
 const Listing = require("../models/listing.js");
 const User = require("../models/user.js");
 
-const MONGO_URL = "mongodb://127.0.0.1:27017/TravelQuest";
+const dbUrl = process.env.ATLASDB_URL || "mongodb://127.0.0.1:27017/TravelQuest";
 
 main()
   .then(() => {
@@ -15,7 +17,7 @@ main()
   });
 
 async function main() {
-  await mongoose.connect(MONGO_URL);
+  await mongoose.connect(dbUrl);
 }
 
 const initDB = async () => {

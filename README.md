@@ -1,3 +1,12 @@
+---
+title: Travel Quest
+emoji: 🚀
+colorFrom: red
+colorTo: pink
+sdk: docker
+pinned: false
+---
+
 ## B.Tech Minor Project 
 ### Travel Quest – Online Hotel Booking Web Application
 

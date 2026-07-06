@@ -25,10 +25,7 @@ const userRouter=require("./routes/user.js");
 const { date } = require("joi");
 
 //connection of DB
-const MONGO_URL="mongodb://127.0.0.1:27017/TravelQuest";
-
-// const dbUrl= process.env.ATLASDB_URL;
-
+const dbUrl = process.env.ATLASDB_URL || "mongodb://127.0.0.1:27017/TravelQuest";
 
 main()//calling  DB
 .then(()=>{
@@ -39,7 +36,7 @@ main()//calling  DB
 });
 //async function for DB
 async function main(){
-    await mongoose.connect(MONGO_URL);
+    await mongoose.connect(dbUrl);
 };
 
 
@@ -54,10 +51,12 @@ app.use(express.static(path.join(__dirname,"/public")));
 
 
 
+const secret = process.env.SECRETE || "mysupersecretcode";
+
 const store=MongoStore.create({
-    mongoUrl:MONGO_URL,
+    mongoUrl:dbUrl,
     crypto:{
-        secret:process.env.SECRETE,
+        secret:secret,
     },
     touchAfter:24*3600,
 });
@@ -69,7 +68,7 @@ store.on("error",()=>{
 //add session==
 const sessionOptions={
     store,
-    secret:process.env.SECRETE,
+    secret:secret,
     resave:false,
     saveUninitialized:true,
     cookie:{
@@ -131,6 +130,7 @@ app.use((err,req,res,next)=>{
 
 
 // server start 
-app.listen(8080,()=>{
-    console.log("server is listening to port 8080");
+const port = process.env.PORT || 8080;
+app.listen(port,()=>{
+    console.log(`server is listening to port ${port}`);
 });

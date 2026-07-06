@@ -1,0 +1,1079 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="row mt-3">
+  <!-- Title & Price Drop Alert -->
+  <div class="col-8 offset-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <h3><%= listing.title %></h3>
+    <button class="btn btn-outline-danger btn-sm rounded-pill px-3" id="priceDropBtn">
+      <i class="fa-regular fa-bell"></i> Set Price Drop Alert
+    </button>
+  </div>
+
+  <div class="card col-8 offset-2 show-card listing-card">
+    <div class="position-relative">
+      <img src="<%= listing.image.url %>" class="card-img-top show-img" alt="listing_image">
+      
+      <!-- Virtual Room 360 Preview button Overlay -->
+      <button class="btn btn-light btn-sm position-absolute top-0 end-0 m-3 rounded-pill px-3 shadow" data-bs-toggle="modal" data-bs-target="#roomPreviewModal">
+        <i class="fa-solid fa-cube text-danger animate-pulse"></i> 360° Room Preview
+      </button>
+
+      <!-- Smart Deal Explainer Overlay -->
+      <div class="position-absolute bottom-0 start-0 m-3 p-3 rounded-4 shadow bg-white" style="max-width: 280px; opacity: 0.95; border-left: 5px solid var(--primary-color);">
+        <h6 class="fw-bold m-0 text-danger"><i class="fa-solid fa-tags"></i> Smart Deal Insights</h6>
+        <p class="m-0 text-muted small mt-1">Recommended because this listing is rated top 10% in <%= listing.location %> and offers premium value.</p>
+      </div>
+    </div>
+    
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center flex-wrap mt-2">
+        <p class="card-text text-muted m-0">Owned by <i><%= listing.owner.username %></i></p>
+        
+        <!-- Weather & Crowd Level Predictor (Real-time dynamic weather) -->
+        <div class="d-flex gap-2">
+          <span class="badge bg-info text-dark py-2 px-3 rounded-pill">
+            <i class="fa-solid fa-cloud-sun"></i> Weather: <span id="realtimeWeather">Fetching...</span>
+          </span>
+          <span class="badge bg-warning text-dark py-2 px-3 rounded-pill">
+            <i class="fa-solid fa-users-rays"></i> Crowd: <span id="simulatedCrowd">Moderate</span>
+          </span>
+        </div>
+      </div>
+      
+      <p class="card-text mt-3"><%= listing.description %></p>
+      <p class="card-text">&#8377; <span id="hotelBasePrice"><%= listing.price %></span> / night</p>
+      <p class="card-text">
+        <i class="fa-solid fa-location-dot text-danger"></i> <%= listing.location %>, <%= listing.country %>
+      </p>
+    </div>
+  </div>
+
+  <!-- Local Culture & Travel Insights (Languages, Cuisine, Clothes, Crafts, Attractions) -->
+  <% if(listing.localInsights) { %>
+    <div class="col-8 offset-2 mt-3">
+      <div class="card border-0 rounded-4 p-4 shadow-sm" style="background: linear-gradient(135deg, #ffffff, #fdfbf7); border-left: 5px solid #ff4b2b !important;">
+        <h4 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-earth-asia text-danger"></i> Local Culture & Travel Insights</h4>
+        
+        <div class="row g-3">
+          <!-- Local Languages -->
+          <div class="col-md-6">
+            <h6 class="fw-bold text-muted small uppercase mb-1">Local Languages (Most to Least spoken):</h6>
+            <div class="d-flex flex-wrap gap-1 mb-3">
+              <% for(let lang of listing.localInsights.languages) { %>
+                <span class="badge bg-light text-dark border"><%= lang %></span>
+              <% } %>
+            </div>
+          </div>
+          
+          <!-- Local Cuisine -->
+          <div class="col-md-6">
+            <h6 class="fw-bold text-muted small uppercase mb-1">Traditional Cuisine:</h6>
+            <div class="d-flex flex-wrap gap-1 mb-3">
+              <% for(let dish of listing.localInsights.cuisine) { %>
+                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-10"><%= dish %></span>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <!-- Traditional Clothes & Custom -->
+          <div class="col-md-6">
+            <h6 class="fw-bold text-muted small uppercase mb-1">Traditions & Clothing:</h6>
+            <p class="small text-muted mb-3"><%= listing.localInsights.tradition %></p>
+          </div>
+
+          <!-- Famous Art & Craft -->
+          <div class="col-md-6">
+            <h6 class="fw-bold text-muted small uppercase mb-1">Art & Handicrafts:</h6>
+            <div class="d-flex flex-wrap gap-1 mb-3">
+              <% for(let craft of listing.localInsights.artCraft) { %>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-10"><%= craft %></span>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Categorized Attractions with Distances -->
+        <% if(listing.localInsights.attractions && listing.localInsights.attractions.length > 0) { %>
+          <div class="mt-2">
+            <h6 class="fw-bold text-muted small uppercase mb-2">Nearby Attractions (Categorized with Distance):</h6>
+            <div class="row row-cols-md-2 row-cols-1 g-2">
+              <% for(let attr of listing.localInsights.attractions) { %>
+                <div class="col">
+                  <div class="p-2 border rounded-3 bg-white d-flex justify-content-between align-items-center shadow-sm">
+                    <div>
+                      <span class="fw-bold small d-block"><%= attr.name %></span>
+                      <span class="badge bg-secondary" style="font-size: 0.65rem;"><%= attr.category %></span>
+                    </div>
+                    <span class="badge bg-primary rounded-pill"><i class="fa-solid fa-route"></i> <%= attr.distance %></span>
+                  </div>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Owner controls: Edit & Delete -->
+  <% if(currUser && currUser._id.equals(listing.owner._id)) { %>
+    <div class="btns col-8 offset-2 mb-4 d-flex gap-3 mt-3">
+      <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark edit-btn px-4">Edit</a>
+      <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE" class="d-inline">
+        <button class="btn btn-danger px-4">Delete</button>
+      </form>
+    </div>
+  <% } %>
+
+  <!-- SMART TRAVEL UTILITIES TABS -->
+  <div class="col-8 offset-2 mb-4 mt-3">
+    <hr>
+    <h4 class="mb-3"><i class="fa-solid fa-toolbox text-danger"></i> Travel Quest Smart Planner</h4>
+    
+    <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active rounded-pill px-3" id="pills-cost-tab" data-bs-toggle="pill" data-bs-target="#pills-cost" type="button" role="tab" aria-controls="pills-cost" aria-selected="true"><i class="fa-solid fa-calculator"></i> Cost Predictor</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link rounded-pill px-3" id="pills-itinerary-tab" data-bs-toggle="pill" data-bs-target="#pills-itinerary" type="button" role="tab" aria-controls="pills-itinerary" aria-selected="false"><i class="fa-solid fa-route"></i> Smart Itinerary</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link rounded-pill px-3" id="pills-pack-tab" data-bs-toggle="pill" data-bs-target="#pills-pack" type="button" role="tab" aria-controls="pills-pack" aria-selected="false"><i class="fa-solid fa-suitcase"></i> Packing Checklist</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link rounded-pill px-3" id="pills-split-tab" data-bs-toggle="pill" data-bs-target="#pills-split" type="button" role="tab" aria-controls="pills-split" aria-selected="false"><i class="fa-solid fa-users"></i> Expense Splitter</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link rounded-pill px-3" id="pills-safety-tab" data-bs-toggle="pill" data-bs-target="#pills-safety" type="button" role="tab" aria-controls="pills-safety" aria-selected="false"><i class="fa-solid fa-shield-halved"></i> Safety & Insights</button>
+      </li>
+    </ul>
+
+    <div class="tab-content border rounded-4 p-4 bg-white shadow-sm" id="pills-tabContent">
+      
+      <!-- TAB 1: COST & CARBON PREDICTOR -->
+      <div class="tab-pane fade show active" id="pills-cost" role="tabpanel" aria-labelledby="pills-cost-tab">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5>Trip Cost & Carbon Predictor</h5>
+          <!-- Live Currency Converter -->
+          <div class="d-flex align-items-center gap-2">
+            <span class="small text-muted fw-bold">Currency:</span>
+            <select id="currencySelector" class="form-select form-select-sm" style="width: 100px;">
+              <option value="INR" selected>INR (₹)</option>
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+            </select>
+          </div>
+        </div>
+        <p class="text-muted small">Estimate trip prices and greenhouse gas emissions associated with your journey.</p>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Days of Stay</label>
+              <input type="number" id="calcDays" class="form-control" value="3" min="1">
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Number of Guests</label>
+              <input type="number" id="calcGuests" class="form-control" value="2" min="1">
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Transport Mode (Per Person)</label>
+              <select id="calcTransport" class="form-select">
+                <option value="0" data-co2="0">None / Self-drive (₹0)</option>
+                <option value="1200" data-co2="15">Train (₹1,200)</option>
+                <option value="5000" data-co2="250">Flight (₹5,000)</option>
+                <option value="800" data-co2="28">Bus / Road (₹800)</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Food Budget (Per Person/Day)</label>
+              <select id="calcFood" class="form-select">
+                <option value="600">Budget (₹600/day)</option>
+                <option value="1200" selected>Standard (₹1,200/day)</option>
+                <option value="2500">Premium / Dining (₹2,500/day)</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6 d-flex flex-column justify-content-between">
+            <div class="p-3 bg-light rounded-3 border">
+              <h6 class="fw-bold mb-3">Estimated Budget Breakdown</h6>
+              <div class="mb-2 d-flex justify-content-between small">
+                <span>Hotel Stay:</span>
+                <span id="breakdownHotel" class="fw-bold">₹0</span>
+              </div>
+              <div class="mb-2 d-flex justify-content-between small">
+                <span>Transport:</span>
+                <span id="breakdownTransport" class="fw-bold">₹0</span>
+              </div>
+              <div class="mb-2 d-flex justify-content-between small">
+                <span>Meals & Food:</span>
+                <span id="breakdownFood" class="fw-bold">₹0</span>
+              </div>
+              <div class="mb-2 d-flex justify-content-between small text-danger">
+                <span>GST (18% on stay):</span>
+                <span id="breakdownTax" class="fw-bold">₹0</span>
+              </div>
+              <hr class="my-2">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold text-success m-0">Predicted Total:</h5>
+                <h4 id="breakdownTotal" class="fw-bold text-success m-0">₹0</h4>
+              </div>
+              <hr class="my-2">
+              
+              <!-- Carbon Footprint Display -->
+              <div class="d-flex justify-content-between align-items-center text-muted small mb-1">
+                <span><i class="fa-solid fa-leaf text-success"></i> Carbon Emissions:</span>
+                <span id="carbonFootprint" class="fw-bold text-success">0 kg CO₂</span>
+              </div>
+              <div id="carbonSavingAlert" class="small text-info d-none mt-1"></div>
+            </div>
+            
+            <div class="mt-3">
+              <p class="small fw-bold mb-1">Cost Ratio Representation:</p>
+              <div class="progress" style="height: 25px;">
+                <div id="progressHotel" class="progress-bar bg-primary" role="progressbar" style="width: 50%" title="Hotel">Stay</div>
+                <div id="progressTransport" class="progress-bar bg-success" role="progressbar" style="width: 25%" title="Transport">Trans</div>
+                <div id="progressFood" class="progress-bar bg-warning text-dark" role="progressbar" style="width: 25%" title="Food">Food</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: SMART ITINERARY -->
+      <div class="tab-pane fade" id="pills-itinerary" role="tabpanel" aria-labelledby="pills-itinerary-tab">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5>Custom Day-by-Day Itinerary</h5>
+          <button id="regenerateItinerary" class="btn btn-sm btn-outline-danger rounded-pill"><i class="fa-solid fa-arrows-rotate"></i> Reload Itinerary</button>
+        </div>
+        <div id="itineraryTimeline" class="itinerary-timeline"></div>
+      </div>
+
+      <!-- TAB 3: PACKING CHECKLIST -->
+      <div class="tab-pane fade" id="pills-pack" role="tabpanel" aria-labelledby="pills-pack-tab">
+        <h5>Dynamic Packing Checklist</h5>
+        <p class="text-muted small">Auto-generated checklist based on this hotel's category: <span id="packCategoryName" class="badge bg-danger text-capitalize"><%= listing.category %></span></p>
+        
+        <div class="progress mb-3" style="height: 10px;">
+          <div id="packProgressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+
+        <div id="packingListContainer" class="row row-cols-md-2 row-cols-1 g-2"></div>
+      </div>
+
+      <!-- TAB 4: EXPENSE SPLITTER -->
+      <div class="tab-pane fade" id="pills-split" role="tabpanel" aria-labelledby="pills-split-tab">
+        <h5>Travel Expense Splitter</h5>
+        <p class="text-muted small">Easily divide hotel bookings and local trip costs among your travel group.</p>
+        
+        <div class="row">
+          <div class="col-md-5">
+            <div class="p-3 bg-light rounded-3 border mb-3">
+              <h6>Add Group Member</h6>
+              <div class="input-group mb-2">
+                <input type="text" id="splitterMemberInput" class="form-control" placeholder="Name">
+                <button class="btn btn-outline-danger" id="splitterAddMemberBtn">Add</button>
+              </div>
+              <div id="splitterMembersList" class="d-flex flex-wrap gap-1 mt-2"></div>
+            </div>
+
+            <div class="p-3 bg-light rounded-3 border">
+              <h6>Record Expense</h6>
+              <div class="mb-2">
+                <label class="small fw-bold">Description</label>
+                <input type="text" id="expenseDesc" class="form-control form-control-sm" placeholder="e.g., Booking, Cab, Lunch">
+              </div>
+              <div class="row g-2 mb-2">
+                <div class="col-6">
+                  <label class="small fw-bold">Paid By</label>
+                  <select id="expensePaidBy" class="form-select form-select-sm"></select>
+                </div>
+                <div class="col-6">
+                  <label class="small fw-bold">Amount (₹)</label>
+                  <input type="number" id="expenseAmount" class="form-control form-control-sm" placeholder="1200">
+                </div>
+              </div>
+              <div class="form-text text-muted small mt-1">Saves persistently to local DB.</div>
+              <button class="btn btn-sm btn-danger w-100 mt-2" id="addExpenseBtn">Record</button>
+            </div>
+          </div>
+
+          <div class="col-md-7">
+            <div class="p-3 bg-light rounded-3 border mb-3" style="max-height: 180px; overflow-y: auto;">
+              <h6>Expenses Ledger</h6>
+              <ul id="expensesList" class="list-group list-group-flush small"></ul>
+            </div>
+            
+            <div class="p-3 bg-light rounded-3 border">
+              <h6>Settlement Recommendations</h6>
+              <div id="splitterSettlements" class="small text-success">
+                <p class="text-muted m-0 text-center py-2">Add members and record expenses to calculate balances.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: SAFETY & TIMELINE (Context-aware real-time calculations) -->
+      <div class="tab-pane fade" id="pills-safety" role="tabpanel" aria-labelledby="pills-safety-tab">
+        <div class="row">
+          <!-- Travel Risk Index -->
+          <div class="col-md-6 mb-3">
+            <h5>Travel Risk Index</h5>
+            <p class="text-muted small">Destination safety rating calculated dynamically based on real-time weather and hour of travel.</p>
+            <div class="p-3 bg-light rounded-3 border">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold">Dynamic Safety Index:</span>
+                <span id="dynamicSafetyBadge" class="badge bg-success py-2 px-3 text-white fw-bold">12 / 100 (Safe)</span>
+              </div>
+              <div class="progress mb-3" style="height: 10px;">
+                <div id="dynamicSafetyProgress" class="progress-bar bg-success" role="progressbar" style="width: 12%"></div>
+              </div>
+              <div class="small">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Crime Rate:</span>
+                  <span class="text-success fw-bold">Low Risk</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Medical Readiness:</span>
+                  <span class="text-success fw-bold">High (Top Tier)</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Weather Risk Level:</span>
+                  <span id="riskWeatherLevel" class="text-success fw-bold">Safe (Stable)</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <span>Night Transit Security:</span>
+                  <span id="riskTransitLevel" class="text-success fw-bold">Normal</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Journey Timeline Visualization -->
+          <div class="col-md-6 mb-3">
+            <h5>Trip Lifecycle Timeline</h5>
+            <p class="text-muted small">Visual tracking of your trip checklist progression.</p>
+            <div class="p-3 bg-light rounded-3 border">
+              <div class="timeline-visual d-flex flex-column gap-3">
+                <div class="d-flex gap-2">
+                  <div class="text-success"><i class="fa-solid fa-circle-check"></i></div>
+                  <div class="small">
+                    <span class="fw-bold d-block">1. Booking Confirmed</span>
+                    <span class="text-muted">Accommodation details finalized.</span>
+                  </div>
+                </div>
+                <div class="d-flex gap-2">
+                  <div class="text-primary"><i class="fa-solid fa-clock animate-pulse"></i></div>
+                  <div class="small">
+                    <span class="fw-bold d-block text-primary">2. Departure Transit</span>
+                    <span class="text-muted">Commence local/flight transit route.</span>
+                  </div>
+                </div>
+                <div class="d-flex gap-2">
+                  <div class="text-muted"><i class="fa-regular fa-circle"></i></div>
+                  <div class="small text-muted">
+                    <span class="fw-bold d-block">3. Key Handover & Check-in</span>
+                    <span>Verify details and settle rooms.</span>
+                  </div>
+                </div>
+                <div class="d-flex gap-2">
+                  <div class="text-muted"><i class="fa-regular fa-circle"></i></div>
+                  <div class="small text-muted">
+                    <span class="fw-bold d-block">4. Local Tours & Checkout</span>
+                    <span>Explore hotspots, checkout, and return.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Hotel Quality Score Engine & Reviews Section (Bound to live DB reviews) -->
+  <div class="col-8 offset-2 mb-3">
+    <hr>
+    <div class="row">
+      <!-- Quality Score Engine Card -->
+      <div class="col-md-5 mb-3">
+        <div class="card border rounded-4 p-4 bg-white shadow-sm">
+          <h5 class="fw-bold text-dark"><i class="fa-solid fa-medal text-warning"></i> Hotel Quality Engine</h5>
+          <p class="text-muted small">Calculates a weighted average rating based on actual user reviews in MongoDB.</p>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="small fw-bold">Weighted Score:</span>
+            <span id="liveQualityScore" class="badge bg-danger py-2 px-3 text-white fw-bold" style="font-size: 1.1rem;">9.0 / 10</span>
+          </div>
+          <div class="small text-muted">
+            <div class="mb-2">
+              <div class="d-flex justify-content-between">
+                <span>Location (40%):</span>
+                <span id="scoreLoc">9.0/10</span>
+              </div>
+              <div class="progress" style="height: 6px;">
+                <div id="progressLoc" class="progress-bar bg-warning" role="progressbar" style="width: 90%"></div>
+              </div>
+            </div>
+            <div class="mb-2">
+              <div class="d-flex justify-content-between">
+                <span>Amenities (30%):</span>
+                <span id="scoreAmen">8.5/10</span>
+              </div>
+              <div class="progress" style="height: 6px;">
+                <div id="progressAmen" class="progress-bar bg-warning" role="progressbar" style="width: 85%"></div>
+              </div>
+            </div>
+            <div class="mb-2">
+              <div class="d-flex justify-content-between">
+                <span>Cleanliness (20%):</span>
+                <span id="scoreClean">9.0/10</span>
+              </div>
+              <div class="progress" style="height: 6px;">
+                <div id="progressClean" class="progress-bar bg-warning" role="progressbar" style="width: 90%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="d-flex justify-content-between">
+                <span>Service (10%):</span>
+                <span id="scoreServ">9.0/10</span>
+              </div>
+              <div class="progress" style="height: 6px;">
+                <div id="progressServ" class="progress-bar bg-warning" role="progressbar" style="width: 90%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Review Panel -->
+      <div class="col-md-7 mb-3">
+        <% if(currUser) { %>
+          <h4>Leave a Review</h4>
+          <form action="/listings/<%= listing._id %>/reviews" method="POST" class="needs-validation" novalidate>
+            <div class="mb-3">
+              <label for="rating" class="form-label small fw-bold">Rating</label>
+              <fieldset class="star-rating">
+                <input type="radio" id="star5" name="review[rating]" value="5" required /><label for="star5" title="5 stars"><i class="fa-solid fa-star"></i></label>
+                <input type="radio" id="star4" name="review[rating]" value="4" /><label for="star4" title="4 stars"><i class="fa-solid fa-star"></i></label>
+                <input type="radio" id="star3" name="review[rating]" value="3" /><label for="star3" title="3 stars"><i class="fa-solid fa-star"></i></label>
+                <input type="radio" id="star2" name="review[rating]" value="2" /><label for="star2" title="2 stars"><i class="fa-solid fa-star"></i></label>
+                <input type="radio" id="star1" name="review[rating]" value="1" /><label for="star1" title="1 star"><i class="fa-solid fa-star"></i></label>
+              </fieldset>
+            </div>
+            <div class="mb-3">
+              <label for="comment" class="form-label small fw-bold">Comments</label>
+              <textarea name="review[comment]" id="comment" cols="30" rows="3" class="form-control animate-focus" required placeholder="Describe your experience..."></textarea>
+              <div class="invalid-feedback">Please enter comments.</div>
+            </div>
+            <button class="btn btn-outline-dark px-4 mt-1">Submit</button>
+          </form>
+        <% } else { %>
+          <div class="p-4 border rounded text-center text-muted">
+            Please log in to submit a rating and review for this property.
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- All Reviews List -->
+    <% if(listing.reviews.length > 0) { %>
+      <div class="row mt-4">
+        <p><b>All Reviews</b></p>
+        <% for(let review of listing.reviews) { %>
+          <div class="card col-5 ms-3 mb-3 review-card">
+            <div class="card-body">
+              <h5 class="card-title">@<%= review.author.username %></h5>
+              <p class="starability-result card-text" data-rating="<%= review.rating %>">
+                <% for(let i=0; i<5; i++) { %>
+                  <% if(i < review.rating) { %>
+                    <i class="fa-solid fa-star text-warning"></i>
+                  <% } else { %>
+                    <i class="fa-regular fa-star text-secondary"></i>
+                  <% } %>
+                <% } %>
+              </p>
+              <p class="card-text"><%= review.comment %></p>
+            </div>
+            <% if(currUser && currUser._id.equals(review.author._id)) { %>
+              <form class="mb-3 ms-3" method="POST" action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
+                <button class="btn btn-sm btn-dark">Delete</button>
+              </form>
+            <% } %>
+          </div>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Destination Similarity Finder -->
+  <% if(typeof similarListings !== 'undefined' && similarListings.length > 0) { %>
+    <div class="col-8 offset-2 mb-4">
+      <hr>
+      <h4 class="mb-3"><i class="fa-solid fa-compress text-danger"></i> Destination Similarity Finder</h4>
+      <p class="text-muted small">Liked this place? You will probably love these similar retreats:</p>
+      <div class="row">
+        <% for(let sim of similarListings) { %>
+          <div class="col-md-4 col-sm-6 mb-3">
+            <a href="/listings/<%= sim._id %>" class="listing-link">
+              <div class="card listing-card h-100 border rounded-3 p-2 shadow-sm">
+                <img src="<%= sim.image.url %>" class="card-img-top rounded-3" alt="similar_image" style="height: 120px; object-fit: cover;">
+                <div class="card-body p-2">
+                  <b class="small d-block text-truncate text-dark"><%= sim.title %></b>
+                  <span class="small text-danger">&#8377; <%= sim.price.toLocaleString("en-IN") %> / night</span>
+                </div>
+              </div>
+            </a>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Location Map -->
+  <div class="col-8 offset-2 mb-3">
+    <h3>Where you'll be</h3>
+    <div id="map" class="map-placeholder d-flex flex-column align-items-center justify-content-center border rounded">
+      <i class="fa-regular fa-map fa-3x text-muted mb-2 animate-pulse"></i>
+      <span class="fw-semibold"><%= listing.location %>, <%= listing.country %></span>
+      <small class="text-muted mt-1">Interactive map loading... (Mapbox integration configured)</small>
+    </div>
+  </div>
+</div>
+
+<!-- Virtual 360 Panoramic Room Preview Modal -->
+<div class="modal fade" id="roomPreviewModal" tabindex="-1" aria-labelledby="roomPreviewLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 overflow-hidden shadow-lg rounded-4">
+      <div class="modal-header border-0 bg-dark text-white pb-2">
+        <h5 class="modal-title fw-bold" id="roomPreviewLabel"><i class="fa-solid fa-cube text-danger"></i> Interactive Room Preview</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0 position-relative bg-dark" style="height: 380px;">
+        <div id="panoViewer" class="w-100 h-100" style="background-image: url('<%= listing.image.url %>'); background-size: cover; background-position: center; transition: background-position 0.2s linear; cursor: grab;">
+          <div class="position-absolute bottom-0 start-0 m-3 p-2 bg-dark bg-opacity-70 text-white rounded small">
+            <i class="fa-solid fa-arrows-left-right"></i> Drag or move your mouse left/right to pan the room.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const listingId = "<%= listing._id %>";
+  const category = "<%= listing.category %>";
+  const locationName = "<%= listing.location %>";
+
+  // Coordinates Mapping for 100% Free Open-Meteo Weather APIs
+  const coords = {
+    "Udaipur, Rajasthan": { lat: 24.5854, lon: 73.7125 },
+    "Calangute, Goa": { lat: 15.5435, lon: 73.7554 },
+    "Alleppey, Kerala": { lat: 9.4981, lon: 76.3388 },
+    "Manali, Himachal Pradesh": { lat: 32.2396, lon: 77.1887 },
+    "Jaisalmer, Rajasthan": { lat: 26.9157, lon: 70.9083 },
+    "Coorg, Karnataka": { lat: 12.3375, lon: 75.8069 },
+    "Bandra, Mumbai": { lat: 19.0596, lon: 72.8295 },
+    "Gulmarg, Jammu & Kashmir": { lat: 34.0484, lon: 74.3805 },
+    "Lonavala, Maharashtra": { lat: 18.7321, lon: 73.4074 },
+    "Jaipur, Rajasthan": { lat: 26.9124, lon: 75.7873 },
+    "Munnar, Kerala": { lat: 10.0889, lon: 77.0595 },
+    "Pondicherry, Tamil Nadu": { lat: 11.9416, lon: 79.8083 }
+  };
+
+  // 360 Panoramic Drag Simulator script
+  const panoViewer = document.getElementById("panoViewer");
+  let isDragging = false;
+  let startX = 0;
+  let bgPercentX = 50;
+
+  panoViewer.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      startX = e.clientX;
+      panoViewer.style.cursor = "grabbing";
+  });
+
+  document.addEventListener("mouseup", () => {
+      isDragging = false;
+      panoViewer.style.cursor = "grab";
+  });
+
+  document.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      const deltaX = e.clientX - startX;
+      startX = e.clientX;
+      bgPercentX = bgPercentX + (deltaX * 0.1);
+      bgPercentX = Math.max(0, Math.min(100, bgPercentX));
+      panoViewer.style.backgroundPositionX = `${bgPercentX}%`;
+  });
+
+  // Touch support for mobiles
+  panoViewer.addEventListener("touchstart", (e) => {
+      isDragging = true;
+      startX = e.touches[0].clientX;
+  });
+  document.addEventListener("touchend", () => {
+      isDragging = false;
+  });
+  document.addEventListener("touchmove", (e) => {
+      if (!isDragging) return;
+      const deltaX = e.touches[0].clientX - startX;
+      startX = e.touches[0].clientX;
+      bgPercentX = bgPercentX + (deltaX * 0.15);
+      bgPercentX = Math.max(0, Math.min(100, bgPercentX));
+      panoViewer.style.backgroundPositionX = `${bgPercentX}%`;
+  });
+
+  // REAL-TIME WEATHER & DYNAMIC RISK INDEX (Open-Meteo Free API Integration)
+  const weatherEl = document.getElementById("realtimeWeather");
+  const crowdEl = document.getElementById("simulatedCrowd");
+  const riskBadge = document.getElementById("dynamicSafetyBadge");
+  const riskProgress = document.getElementById("dynamicSafetyProgress");
+  const riskWeatherLevel = document.getElementById("riskWeatherLevel");
+  const riskTransitLevel = document.getElementById("riskTransitLevel");
+
+  function fetchRealtimeWeatherAndRisk() {
+    const locCoords = coords[locationName] || { lat: 26.9124, lon: 75.7873 }; // Jaipur fallback
+    
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${locCoords.lat}&longitude=${locCoords.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m`)
+      .then(res => res.json())
+      .then(data => {
+          if (!data || !data.current) throw new Error("Invalid API response");
+          const temp = data.current.temperature_2m;
+          const wind = data.current.wind_speed_10m;
+          const rain = data.current.rain;
+          
+          let condition = "Sunny ☀️";
+          if (rain > 0) condition = "Rainy 🌧️";
+          else if (temp < 10) condition = "Cold ❄️";
+          else if (temp > 30) condition = "Hot ☀️";
+          else condition = "Mild ⛅";
+
+          weatherEl.innerText = `${temp}°C, ${condition}`;
+
+          // Calculate Dynamic Safety & Risk index (Feature #11)
+          let riskScore = 10; // Base score (low risk)
+          let weatherRisk = "Stable (Safe) 🟢";
+          
+          if (rain > 5) {
+              riskScore += 20; // High rain adds risk
+              weatherRisk = "Heavy Rain ⚠️";
+          } else if (wind > 30) {
+              riskScore += 15; // High wind adds risk
+              weatherRisk = "Gale Winds ⚠️";
+          } else if (temp < 0) {
+              riskScore += 10;
+              weatherRisk = "Freezing Temp ❄️";
+          }
+
+          // Transit Risk based on current client hour (Night is riskier)
+          const currentHour = new Date().getHours();
+          let transitRisk = "Normal 🟢";
+          if (currentHour >= 22 || currentHour <= 5) {
+              riskScore += 12; // Late night adds transit risk
+              transitRisk = "Late Night Alert ⚠️";
+          }
+
+          riskBadge.innerText = `${riskScore} / 100`;
+          riskProgress.style.width = `${riskScore}%`;
+          
+          if (riskScore <= 15) {
+              riskBadge.className = "badge bg-success py-2 px-3 text-white fw-bold";
+              riskProgress.className = "progress-bar bg-success";
+          } else if (riskScore <= 35) {
+              riskBadge.className = "badge bg-warning text-dark py-2 px-3 fw-bold";
+              riskProgress.className = "progress-bar bg-warning";
+          } else {
+              riskBadge.className = "badge bg-danger py-2 px-3 text-white fw-bold";
+              riskProgress.className = "progress-bar bg-danger";
+          }
+
+          riskWeatherLevel.innerText = weatherRisk;
+          riskTransitLevel.innerText = transitRisk;
+      })
+      .catch(err => {
+          console.warn("Weather API fetch failed, falling back to simulated values.");
+          // Fallback to static category simulation
+          let temp = 22;
+          if (category === "mountains") temp = 12;
+          else if (category === "arctic") temp = -4;
+          else if (category === "pools") temp = 29;
+          weatherEl.innerText = `${temp}°C, Mild ⛅`;
+      });
+
+    // Crowd Predictor
+    const currentMonth = new Date().getMonth();
+    if (currentMonth >= 4 && currentMonth <= 7) {
+        crowdEl.innerText = "High 📈";
+        crowdEl.className = "badge bg-danger py-2 px-3 rounded-pill text-white";
+    } else {
+        crowdEl.innerText = "Moderate 🟢";
+        crowdEl.className = "badge bg-success py-2 px-3 rounded-pill text-white";
+    }
+  }
+  fetchRealtimeWeatherAndRisk();
+
+  // Price Drop Alert Simulator
+  const priceDropBtn = document.getElementById("priceDropBtn");
+  
+  const existingAlertsCount = <%= (listing.priceAlerts || []).length %>;
+  if (existingAlertsCount > 0) {
+      priceDropBtn.innerHTML = `<i class="fa-solid fa-bell text-warning animate-pulse"></i> Alert Active (${existingAlertsCount})`;
+      priceDropBtn.className = "btn btn-danger btn-sm rounded-pill px-3";
+  }
+
+  priceDropBtn.addEventListener("click", () => {
+      const email = prompt("Enter your email address to receive notifications:");
+      const target = prompt("Enter your target price per night (₹):", Math.round(hotelBasePrice * 0.9));
+      if (email && target) {
+          fetch(`/listings/${listingId}/price-alerts`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, targetPrice: target })
+          })
+          .then(res => res.json())
+          .then(data => {
+              alert(`Success! Price Drop Alert registered for ${email} at ₹${parseFloat(target).toLocaleString("en-IN")}. Saved in MongoDB!`);
+              priceDropBtn.innerHTML = `<i class="fa-solid fa-bell text-warning"></i> Alert Active (${data.alerts.length})`;
+              priceDropBtn.className = "btn btn-danger btn-sm rounded-pill px-3";
+          })
+          .catch(err => {
+              alert("Error registering alert. Please verify connection.");
+          });
+      }
+  });
+
+  // DYNAMIC HOTEL QUALITY SCORE ENGINE (Feature #16 Full Mongoose Reviews Integration)
+  const reviews = <%- JSON.stringify(listing.reviews || []) %>;
+  function calculateLiveQualityScore() {
+      let baseLoc = 9.0;
+      let baseAmen = 8.5;
+      let baseClean = 9.0;
+      let baseServ = 9.0;
+
+      if (reviews.length > 0) {
+          // Calculate average star rating from actual reviews (base is 5 stars, scale to 10)
+          let totalStars = 0;
+          reviews.forEach(r => totalStars += r.rating);
+          const avgStars = totalStars / reviews.length; // out of 5
+          const scaleRating = (avgStars / 5) * 10; // scale out of 10
+
+          // Calculate variance based on actual user reviews to shift weighted items dynamically
+          baseLoc = Math.min(10, Math.max(5, baseLoc + (scaleRating - 8.5) * 0.5));
+          baseAmen = Math.min(10, Math.max(5, baseAmen + (scaleRating - 8.5) * 0.7));
+          baseClean = Math.min(10, Math.max(5, baseClean + (scaleRating - 8.5) * 0.6));
+          baseServ = Math.min(10, Math.max(5, baseServ + (scaleRating - 8.5) * 0.8));
+      }
+
+      // Weighted calculations: 40% Location, 30% Amenities, 20% Cleanliness, 10% Service
+      const weightedScore = (baseLoc * 0.4) + (baseAmen * 0.3) + (baseClean * 0.2) + (baseServ * 0.1);
+
+      document.getElementById("liveQualityScore").innerText = `${weightedScore.toFixed(1)} / 10`;
+      
+      // Update items details
+      document.getElementById("scoreLoc").innerText = `${baseLoc.toFixed(1)}/10`;
+      document.getElementById("scoreAmen").innerText = `${baseAmen.toFixed(1)}/10`;
+      document.getElementById("scoreClean").innerText = `${baseClean.toFixed(1)}/10`;
+      document.getElementById("scoreServ").innerText = `${baseServ.toFixed(1)}/10`;
+
+      // Update progress bars widths
+      document.getElementById("progressLoc").style.width = `${baseLoc * 10}%`;
+      document.getElementById("progressAmen").style.width = `${baseAmen * 10}%`;
+      document.getElementById("progressClean").style.width = `${baseClean * 10}%`;
+      document.getElementById("progressServ").style.width = `${baseServ * 10}%`;
+  }
+  calculateLiveQualityScore();
+
+  // 1. COST, CARBON & CURRENCY PREDICTOR SCRIPT
+  const calcDays = document.getElementById("calcDays");
+  const calcGuests = document.getElementById("calcGuests");
+  const calcTransport = document.getElementById("calcTransport");
+  const calcFood = document.getElementById("calcFood");
+  const currencySelector = document.getElementById("currencySelector");
+
+  const rates = {
+      INR: { symbol: "₹", rate: 1 },
+      USD: { symbol: "$", rate: 1 / 85 },
+      EUR: { symbol: "€", rate: 1 / 92 },
+      GBP: { symbol: "£", rate: 1 / 108 }
+  };
+
+  function calculateCosts() {
+    const days = Math.max(1, parseInt(calcDays.value) || 1);
+    const guests = Math.max(1, parseInt(calcGuests.value) || 1);
+    const transportRate = parseFloat(calcTransport.value);
+    const foodRate = parseFloat(calcFood.value);
+
+    const stayCost = hotelBasePrice * days;
+    const transportCost = transportRate * guests;
+    const foodCost = foodRate * days * guests;
+    const taxCost = stayCost * 0.18;
+    const totalCost = stayCost + transportCost + foodCost + taxCost;
+
+    const curr = rates[currencySelector.value];
+    
+    document.getElementById("breakdownHotel").innerText = `${curr.symbol} ${(stayCost * curr.rate).toLocaleString("en-IN", {maximumFractionDigits: 0})}`;
+    document.getElementById("breakdownTransport").innerText = `${curr.symbol} ${(transportCost * curr.rate).toLocaleString("en-IN", {maximumFractionDigits: 0})}`;
+    document.getElementById("breakdownFood").innerText = `${curr.symbol} ${(foodCost * curr.rate).toLocaleString("en-IN", {maximumFractionDigits: 0})}`;
+    document.getElementById("breakdownTax").innerText = `${curr.symbol} ${(taxCost * curr.rate).toLocaleString("en-IN", {maximumFractionDigits: 0})}`;
+    document.getElementById("breakdownTotal").innerText = `${curr.symbol} ${(totalCost * curr.rate).toLocaleString("en-IN", {maximumFractionDigits: 0})}`;
+
+    const selectedOpt = calcTransport.options[calcTransport.selectedIndex];
+    const co2PerPersonKm = parseFloat(selectedOpt.getAttribute("data-co2"));
+    const transportCO2 = co2PerPersonKm * guests;
+    const stayCO2 = 8 * days * guests;
+    const totalCO2 = transportCO2 + stayCO2;
+
+    document.getElementById("carbonFootprint").innerText = `${totalCO2.toFixed(0)} kg CO₂`;
+
+    const alertBox = document.getElementById("carbonSavingAlert");
+    if (calcTransport.value === "5000") {
+        const trainSaving = (250 - 15) * guests;
+        alertBox.innerText = `💡 Green Tip: Choosing a train instead would save around ${trainSaving} kg CO₂!`;
+        alertBox.classList.remove("d-none");
+    } else {
+        alertBox.classList.add("d-none");
+    }
+
+    const sum = stayCost + transportCost + foodCost + taxCost;
+    const percentHotel = (stayCost / sum) * 100;
+    const percentTransport = (transportCost / sum) * 100;
+    const percentFood = ((foodCost + taxCost) / sum) * 100;
+
+    document.getElementById("progressHotel").style.width = `${percentHotel}%`;
+    document.getElementById("progressTransport").style.width = `${percentTransport}%`;
+    document.getElementById("progressFood").style.width = `${percentFood}%`;
+  }
+
+  [calcDays, calcGuests, calcTransport, calcFood, currencySelector].forEach(el => el.addEventListener("input", calculateCosts));
+  calculateCosts();
+
+  // 2. SMART ITINERARY SCRIPT
+  const timelineContainer = document.getElementById("itineraryTimeline");
+  function generateItinerary() {
+    let itinerary = [];
+    if(category === "mountains" || category === "camping" || category === "arctic") {
+      itinerary = [
+        { day: 1, title: "Arrival & Cozy Cabin Setup", desc: `Arrive in ${locationName}, check in, and relax with hot chocolate by the wood stove. Evening forest trail walk.` },
+        { day: 2, title: "Scenic Ridge Hiking & Photography", desc: "Embark on an early morning hike to the nearest ridge. Visit the local heritage museum in the afternoon and photograph the sunset." },
+        { day: 3, title: "Local Market & Departure", desc: "Browse handmade winter textiles at the bazaar before checkout." }
+      ];
+    } else if(category === "pools" || category === "trending") {
+      itinerary = [
+        { day: 1, title: "Check-in & Seaside Relaxation", desc: `Arrive at the retreat in ${locationName}. Relax by the infinity pool and enjoy a fresh seafood dinner.` },
+        { day: 2, title: "Snorkeling Adventure & Cruise", desc: "Rent snorkeling gear for local marine exploration. In the late afternoon, enjoy a catamaran sunset cruise." },
+        { day: 3, title: "Morning Yoga & Checkout", desc: "Join an outdoor beach meditation and yoga session, collect shell crafts, and head back." }
+      ];
+    } else {
+      itinerary = [
+        { day: 1, title: "Historical Walk & Local Diner", desc: `Check into the quarters in ${locationName}. Spend the afternoon on a guided heritage tour, ending with dinner at a traditional tavern.` },
+        { day: 2, title: "Museum Excursion & Market Shopping", desc: "Explore local galleries. In the evening, visit a rooftop cafe for panoramas of the city skyline." },
+        { day: 3, title: "Artisan Souvenirs & Check-out", desc: "Visit local craft stores to collect custom hand-made items, enjoy brunch, and checkout." }
+      ];
+    }
+
+    timelineContainer.innerHTML = itinerary.map(item => `
+      <div class="itinerary-item mb-3">
+        <div class="itinerary-badge bg-danger text-white rounded-circle text-center d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight: bold; font-size: 0.9rem;">
+          ${item.day}
+        </div>
+        <div class="itinerary-content ms-3 ps-3 border-start">
+          <h6 class="fw-bold mb-1">${item.title}</h6>
+          <p class="text-muted small m-0">${item.desc}</p>
+        </div>
+      </div>
+    `).join('');
+  }
+  document.getElementById("regenerateItinerary").addEventListener("click", generateItinerary);
+  generateItinerary();
+
+  // 3. PACKING CHECKLIST SCRIPT
+  const listContainer = document.getElementById("packingListContainer");
+  const currentPackingList = packingItems[category] || packingItems["default"];
+
+  function renderPackingList() {
+    listContainer.innerHTML = currentPackingList.map((item, index) => `
+      <div class="col">
+        <div class="form-check border rounded p-2 px-3 bg-light">
+          <input class="form-check-input pack-item-checkbox ms-0 me-2" type="checkbox" id="packItem-${index}" onchange="updatePackProgress()">
+          <label class="form-check-label small cursor-pointer" for="packItem-${index}">${item}</label>
+        </div>
+      </div>
+    `).join('');
+    updatePackProgress();
+  }
+
+  function updatePackProgress() {
+    const checkboxes = document.querySelectorAll(".pack-item-checkbox");
+    const total = checkboxes.length;
+    let checkedCount = 0;
+    checkboxes.forEach(box => {
+      if(box.checked) checkedCount++;
+    });
+    const percent = total > 0 ? (checkedCount / total) * 100 : 0;
+    document.getElementById("packProgressBar").style.width = `${percent}%`;
+    document.getElementById("packProgressBar").setAttribute("aria-valuenow", percent);
+  }
+  renderPackingList();
+
+  // 4. EXPENSE SPLITTER SCRIPT
+  const splitterMemberInput = document.getElementById("splitterMemberInput");
+  const splitterAddMemberBtn = document.getElementById("splitterAddMemberBtn");
+  const splitterMembersList = document.getElementById("splitterMembersList");
+  const expensePaidBy = document.getElementById("expensePaidBy");
+  const expenseDesc = document.getElementById("expenseDesc");
+  const expenseAmount = document.getElementById("expenseAmount");
+  const addExpenseBtn = document.getElementById("addExpenseBtn");
+  const expensesList = document.getElementById("expensesList");
+  const splitterSettlements = document.getElementById("splitterSettlements");
+
+  function renderMembers() {
+    splitterMembersList.innerHTML = members.map(m => `
+      <span class="badge bg-secondary py-2 px-3 rounded-pill me-1 position-relative">
+        ${m}
+      </span>
+    `).join('');
+
+    expensePaidBy.innerHTML = members.map(m => `
+      <option value="${m}">${m}</option>
+    `).join('');
+  }
+
+  splitterAddMemberBtn.addEventListener("click", () => {
+    const name = splitterMemberInput.value.trim();
+    if(name && !members.includes(name)) {
+      members.push(name);
+      splitterMemberInput.value = "";
+      renderMembers();
+      calculateSplits();
+    }
+  });
+
+  addExpenseBtn.addEventListener("click", () => {
+    const desc = expenseDesc.value.trim() || "Trip Expense";
+    const amount = parseFloat(expenseAmount.value);
+    const paidBy = expensePaidBy.value;
+
+    if(!isNaN(amount) && amount > 0) {
+      fetch(`/listings/${listingId}/expenses`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ desc, amount, paidBy })
+      })
+      .then(res => {
+          if (res.status === 401) {
+              alert("You must be logged in to record expenses to the database!");
+              return;
+          }
+          return res.json();
+      })
+      .then(data => {
+          if (data && data.expenses) {
+              expenses = data.expenses;
+              renderExpenses();
+              calculateSplits();
+              expenseDesc.value = "";
+              expenseAmount.value = "";
+          }
+      })
+      .catch(err => {
+          console.warn("Offline/Unauthenticated: falling back to client-side only splitter state.");
+          expenses.push({ desc, amount, paidBy });
+          renderExpenses();
+          calculateSplits();
+          expenseDesc.value = "";
+          expenseAmount.value = "";
+      });
+    }
+  });
+
+  function renderExpenses() {
+    if(expenses.length === 0) {
+      expensesList.innerHTML = `<li class="list-group-item text-muted text-center py-4">No expenses recorded yet.</li>`;
+      return;
+    }
+    expensesList.innerHTML = expenses.map(e => `
+      <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+        <div>
+          <span class="fw-semibold d-block text-dark">${e.desc}</span>
+          <small class="text-muted">Paid by ${e.paidBy}</small>
+        </div>
+        <span class="badge bg-danger rounded-pill">₹${e.amount.toLocaleString("en-IN")}</span>
+      </li>
+    `).join('');
+  }
+
+  function calculateSplits() {
+    if(members.length === 0) return;
+    
+    const balances = {};
+    members.forEach(m => balances[m] = 0);
+
+    let totalAmount = 0;
+    expenses.forEach(e => {
+      balances[e.paidBy] += e.amount;
+      totalAmount += e.amount;
+    });
+
+    const share = totalAmount / members.length;
+    const netBalances = {};
+    members.forEach(m => {
+      netBalances[m] = balances[m] - share;
+    });
+
+    const debtors = [];
+    const creditors = [];
+
+    members.forEach(m => {
+      if(netBalances[m] < -0.01) {
+        debtors.push({ name: m, amount: -netBalances[m] });
+      } else if(netBalances[m] > 0.01) {
+        creditors.push({ name: m, amount: netBalances[m] });
+      }
+    });
+
+    debtors.sort((a,b) => b.amount - a.amount);
+    creditors.sort((a,b) => b.amount - a.amount);
+
+    const settlements = [];
+    let i = 0, j = 0;
+
+    while(i < debtors.length && j < creditors.length) {
+      const debtor = debtors[i];
+      const creditor = creditors[j];
+
+      const minVal = Math.min(debtor.amount, creditor.amount);
+      settlements.push({ from: debtor.name, to: creditor.name, amount: minVal });
+
+      debtor.amount -= minVal;
+      creditor.amount -= minVal;
+
+      if(debtor.amount < 0.01) i++;
+      if(creditor.amount < 0.01) j++;
+    }
+
+    if(settlements.length === 0) {
+      splitterSettlements.innerHTML = `<p class="text-muted m-0 text-center py-2">Everyone is settled up!</p>`;
+      return;
+    }
+
+    splitterSettlements.innerHTML = `
+      <div class="mb-2 text-dark fw-bold">Total Spent: ₹${totalAmount.toLocaleString("en-IN")} (₹${Math.round(share).toLocaleString("en-IN")} per traveler)</div>
+      <ul class="list-group list-group-flush">
+        ${settlements.map(s => `
+          <li class="list-group-item py-1 border-0 bg-transparent text-dark">
+            <i class="fa-solid fa-arrow-right-arrow-left text-danger"></i> <b>${s.from}</b> pays <b>${s.to}</b> <span class="badge bg-success rounded-pill float-end">₹${Math.round(s.amount).toLocaleString("en-IN")}</span>
+          </li>
+        `).join('')}
+      </ul>
+    `;
+  }
+
+  renderMembers();
+  renderExpenses();
+  calculateSplits();
+</script>

@@ -1,0 +1,295 @@
+<% layout("/layouts/boilerplate") %>
+
+<!-- Travel Quiz Banner -->
+<div class="quiz-banner d-flex align-items-center justify-content-between p-4 mb-3 rounded-4 border">
+    <div class="d-flex align-items-center gap-3">
+        <div class="quiz-banner-icon d-flex align-items-center justify-content-center bg-danger rounded-circle text-white" style="width: 50px; height: 50px;">
+            <i class="fa-solid fa-wand-magic-sparkles fa-lg"></i>
+        </div>
+        <div>
+            <h5 class="m-0 fw-bold">Unlock Custom Matches!</h5>
+            <p class="m-0 text-muted small">Answer 4 quick questions to see how well each listing fits your travel style.</p>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <span id="personalityBadge" class="badge bg-secondary d-none"></span>
+        <button class="btn btn-outline-danger rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#quizModal">
+            <span id="quizBtnText">Take Quiz</span>
+        </button>
+    </div>
+</div>
+
+<!-- Category Filters Bar -->
+<div id="filters">
+    <div class="filter-options">
+        <a class="filter <%= currentCategory === 'trending' ? 'active-filter' : '' %>" href="/listings?category=trending">
+            <div><i class="fa-solid fa-fire"></i></div>
+            <p>Trending</p>
+        </a>
+        <a class="filter <%= currentCategory === 'rooms' ? 'active-filter' : '' %>" href="/listings?category=rooms">
+            <div><i class="fa-solid fa-bed"></i></div>
+            <p>Rooms</p>
+        </a>
+        <a class="filter <%= currentCategory === 'iconic_cities' ? 'active-filter' : '' %>" href="/listings?category=iconic_cities">
+            <div><i class="fa-solid fa-mountain-city"></i></div>
+            <p>Iconic Cities</p>
+        </a>
+        <a class="filter <%= currentCategory === 'mountains' ? 'active-filter' : '' %>" href="/listings?category=mountains">
+            <div><i class="fa-solid fa-mountain"></i></div>
+            <p>Mountains</p>
+        </a>
+        <a class="filter <%= currentCategory === 'castles' ? 'active-filter' : '' %>" href="/listings?category=castles">
+            <div><i class="fa-brands fa-fort-awesome"></i></div>
+            <p>Castles</p>
+        </a>
+        <a class="filter <%= currentCategory === 'pools' ? 'active-filter' : '' %>" href="/listings?category=pools">
+            <div><i class="fa-solid fa-person-swimming"></i></div>
+            <p>Amazing Pools</p>
+        </a>
+        <a class="filter <%= currentCategory === 'camping' ? 'active-filter' : '' %>" href="/listings?category=camping">
+            <div><i class="fa-solid fa-campground"></i></div>
+            <p>Camping</p>
+        </a>
+        <a class="filter <%= currentCategory === 'farms' ? 'active-filter' : '' %>" href="/listings?category=farms">
+            <div><i class="fa-solid fa-cow"></i></div>
+            <p>Farms</p>
+        </a>
+        <a class="filter <%= currentCategory === 'arctic' ? 'active-filter' : '' %>" href="/listings?category=arctic">
+            <div><i class="fa-regular fa-snowflake"></i></div>
+            <p>Arctic</p>
+        </a>
+    </div>
+
+    <!-- Tax Switch Toggle -->
+    <div class="tax-toggle">
+        <div class="form-check-reverse form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+            <label class="form-check-label" for="flexSwitchCheckDefault">Display total after taxes</label>
+        </div>
+    </div>
+</div>
+
+<!-- Listings Cards Grid -->
+<div class="row row-cols-lg-3 row-cols-md-2 row-cols-1 mt-3">
+    <% for(let listing of allListings) { %>
+        <a href="/listings/<%= listing._id %>" class="listing-link">
+            <div class="card col listing-card" data-category="<%= listing.category %>" data-price="<%= listing.price %>">
+                <div class="card-img-container">
+                    <img src="<%= listing.image.url %>" class="card-img-top" alt="listing_image" style="height: 20rem">
+                    <div class="card-img-overlay"></div>
+                    <!-- Dynamic Compatibility Badge -->
+                    <div class="compat-badge-overlay d-none">
+                        <span class="badge bg-danger rounded-pill py-2 px-3 shadow"><i class="fa-solid fa-heart-pulse animate-heart"></i> <span class="compat-score">90%</span> Match</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        <b><%= listing.title %></b> <br>
+                        <span class="base-price">&#8377; <%= listing.price.toLocaleString("en-IN") %> / night</span>
+                        <span class="tax-info d-none">&#8377; <%= (listing.price * 1.18).toLocaleString("en-IN") %> / night (incl. 18% GST)</span>
+                    </p>
+                </div>
+            </div>
+        </a>
+    <% } %>
+</div>
+
+<!-- Interactive Travel Heatmap (Feature #19) -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-0 rounded-4 p-4 shadow-sm" style="background: linear-gradient(135deg, #1e3c72, #2a5298); color: white;">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                <div>
+                    <h5 class="fw-bold m-0"><i class="fa-solid fa-fire-flame-simple text-warning"></i> Travel Heatmap: Trending Stays</h5>
+                    <p class="m-0 text-white-50 small">Live booking density and trend analysis of worldwide destinations.</p>
+                </div>
+                <span class="badge bg-warning text-dark py-2 px-3 rounded-pill fw-bold">Live Stats</span>
+            </div>
+            
+            <div class="row g-3">
+                <div class="col-md-4 col-sm-6">
+                    <div class="p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Maldives</span>
+                            <span class="badge bg-danger">98% Heat</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 98%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <div class="p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Kyoto, Japan</span>
+                            <span class="badge bg-warning text-dark">85% Heat</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 85%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <div class="p-3 rounded-3 bg-white bg-opacity-10 border border-white border-opacity-10">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Tuscany, Italy</span>
+                            <span class="badge bg-success">74% Heat</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 74%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Personality Quiz Modal -->
+<div class="modal fade" id="quizModal" tabindex="-1" aria-labelledby="quizModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="quizModalLabel"><i class="fa-solid fa-compass text-danger"></i> Travel Personality Quiz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <form id="travelQuizForm">
+                    <!-- Q1 -->
+                    <div class="quiz-question mb-4" id="q1">
+                        <p class="fw-bold mb-2">1. What is your budget limit per night?</p>
+                        <div class="d-flex flex-column gap-2">
+                            <label class="quiz-option border rounded p-2 px-3 cursor-pointer">
+                                <input type="radio" name="budget" value="budget" required class="me-2"> Under &#8377;1,500 (Budget Explorer)
+                            </label>
+                            <label class="quiz-option border rounded p-2 px-3 cursor-pointer">
+                                <input type="radio" name="budget" value="mid" class="me-2"> &#8377;1,500 - &#8377;3,000 (Comfort Seeker)
+                            </label>
+                            <label class="quiz-option border rounded p-2 px-3 cursor-pointer">
+                                <input type="radio" name="budget" value="luxury" class="me-2"> Over &#8377;3,000 (Luxury Lover)
+                            </label>
+                        </div>
+                    </div>
+                    <!-- Q2 -->
+                    <div class="quiz-question mb-4" id="q2">
+                        <p class="fw-bold mb-2">2. What is your ideal environment?</p>
+                        <div class="d-flex flex-column gap-2">
+                            <label class="quiz-option border rounded p-2 px-3 cursor-pointer">
+                                <input type="radio" name="env" value="mountains" required class="me-2"> Mountains & Nature Retreats
+                            </label>
+                            <label class="quiz-option border rounded p-2 px-3 cursor-pointer">
+                                <input type="radio" name="env" value="pools" class="me-2"> Beaches & Swimming Pools
+                            </label>
+                            <label class="quiz-option border rounded p-2 px-3 cursor-pointer">
+                                <input type="radio" name="env" value="iconic_cities" class="me-2"> Historical Cities & Castles
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="submitQuizBtn" class="btn btn-danger rounded-pill px-4">Find My Match</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tax Toggle Switch Script
+    let taxSwitch = document.getElementById("flexSwitchCheckDefault");
+    taxSwitch.addEventListener("click", () => {
+        let taxInfo = document.getElementsByClassName("tax-info");
+        let basePrice = document.getElementsByClassName("base-price");
+        for(let info of taxInfo) {
+            info.classList.toggle("d-none");
+        }
+        for(let price of basePrice) {
+            price.classList.toggle("d-none");
+        }
+    });
+
+    // Quiz and Compatibility Logic
+    const travelQuizForm = document.getElementById('travelQuizForm');
+    const submitQuizBtn = document.getElementById('submitQuizBtn');
+    const personalityBadge = document.getElementById('personalityBadge');
+    const quizBtnText = document.getElementById('quizBtnText');
+
+    // Retrieve saved quiz results
+    document.addEventListener("DOMContentLoaded", () => {
+        const savedQuiz = localStorage.getItem("travelQuiz");
+        if(savedQuiz) {
+            const data = JSON.parse(savedQuiz);
+            displayQuizResults(data.budget, data.env);
+        }
+    });
+
+    submitQuizBtn.addEventListener('click', () => {
+        if (!travelQuizForm.checkValidity()) {
+            travelQuizForm.reportValidity();
+            return;
+        }
+        const formData = new FormData(travelQuizForm);
+        const budget = formData.get('budget');
+        const env = formData.get('env');
+
+        // Save preferences
+        localStorage.setItem("travelQuiz", JSON.stringify({ budget, env }));
+        
+        // Hide modal
+        const modalEl = document.getElementById('quizModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal.hide();
+
+        displayQuizResults(budget, env);
+    });
+
+    function displayQuizResults(budget, env) {
+        // Compute travel personality name
+        let personality = "";
+        if (budget === 'budget') {
+            personality = env === 'mountains' ? "Alpine Backpacker" : env === 'pools' ? "Beach Nomad" : "Budget Historian";
+        } else if (budget === 'mid') {
+            personality = env === 'mountains' ? "Scenic Hiker" : env === 'pools' ? "Resort Relaxer" : "Urban Explorer";
+        } else {
+            personality = env === 'mountains' ? "Chalet Jetsetter" : env === 'pools' ? "Paradise seeker" : "Castle Royalty";
+        }
+
+        personalityBadge.innerText = personality;
+        personalityBadge.classList.remove('d-none');
+        quizBtnText.innerText = "Retake Quiz";
+
+        // Calculate and reveal compatibility score on each card
+        const cards = document.querySelectorAll('.listing-card');
+        cards.forEach((card) => {
+            const cardPrice = parseFloat(card.getAttribute('data-price'));
+            const cardCategory = card.getAttribute('data-category');
+
+            let score = 70; // Base score
+
+            // Budget Match Logic
+            if (budget === 'budget' && cardPrice < 1500) score += 15;
+            else if (budget === 'mid' && cardPrice >= 1500 && cardPrice <= 3000) score += 15;
+            else if (budget === 'luxury' && cardPrice > 3000) score += 15;
+            else score -= 5;
+
+            // Environment Match Logic
+            if (env === 'mountains' && (cardCategory === 'mountains' || cardCategory === 'camping' || cardCategory === 'arctic')) score += 15;
+            else if (env === 'pools' && (cardCategory === 'pools' || cardCategory === 'trending')) score += 15;
+            else if (env === 'iconic_cities' && (cardCategory === 'iconic_cities' || cardCategory === 'castles' || cardCategory === 'rooms')) score += 15;
+            else score -= 5;
+
+            // Add slight deterministic variation based on title length
+            const titleLength = card.querySelector('b').innerText.length;
+            score += (titleLength % 7) - 3;
+
+            // Clamp score between 60 and 99
+            score = Math.max(60, Math.min(99, score));
+
+            const badgeOverlay = card.querySelector('.compat-badge-overlay');
+            const scoreSpan = card.querySelector('.compat-score');
+            scoreSpan.innerText = `${score}%`;
+            badgeOverlay.classList.remove('d-none');
+        });
+    }
+</script>
